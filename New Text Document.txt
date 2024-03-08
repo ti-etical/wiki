@@ -1,0 +1,7 @@
+pg_restore: processing data for table "public.dedoduro"
+pg_restore: while PROCESSING TOC:
+pg_restore: from TOC entry 16329; 0 200311 TABLE DATA dedoduro postgres
+pg_restore: error: COPY failed for table "dedoduro": ERROR: value too long for type character varying(200)
+CONTEXT: COPY dedoduro, line 97339, column descricao: "ALTEROU O REGISTRO DO(A) CONFIG. DA GESTÃO DO USUÁRIO
+Chave Principal do Registro
+Cód. Gest?..."
