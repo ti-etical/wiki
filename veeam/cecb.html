@@ -1,0 +1,23 @@
+<!--
+title: Config Backup
+description: Creating Encrypted Configuration Backups
+published: true
+date: 2024-03-08T13:06:45.866Z
+tags: veeam
+editor: ckeditor
+dateCreated: 2024-03-08T13:06:43.543Z
+-->
+
+<p><a href="https://helpcenter.veeam.com/docs/backup/vsphere/config_backup_encrypted.html?ver=110">Creating Encrypted Configuration Backups - User Guide for VMware vSphere (veeam.com)</a></p>
+<p>Veeam&nbsp;Backup&nbsp;&amp;&nbsp;Replication requires that you encrypt the configuration backup if you have created at least one password in the Password Manager on the backup server.</p>
+<p>When you encrypt jobs or tapes with passwords, Veeam&nbsp;Backup&nbsp;&amp;&nbsp;Replication creates a set of keys that are employed in the encryption process. Some encryption keys, for example, storage keys and metakeys, are stored in the configuration database. If a configuration backup was non-encrypted, data from it could be freely restored on any backup server. Encryption keys saved to the configuration database and the content of encrypted files might become accessible for unintended audience.</p>
+<p>If the Password Manager contains at least one password, and you do not enable encryption for the configuration backup, Veeam&nbsp;Backup&nbsp;&amp;&nbsp;Replication disables configuration backup. To enable the configuration backup, you must enable encryption in the configuration backup job settings.</p>
+<figure class="image"><img src="https://helpcenter.veeam.com/docs/backup/vsphere/images/disable_config_backup.png" alt="Creating Encrypted Configuration Backups"></figure>
+<p>&nbsp;</p>
+<p>After you enable the encryption option, Veeam&nbsp;Backup&nbsp;&amp;&nbsp;Replication will create encrypted configuration backups. Beside encryption keys, the created backups capture credential records specified in the Credentials Manager. When you restore data from such backup, you will not have to enter passwords for credentials records again (unless the passwords for credentials records have changed by the time of restore).</p>
+<p>To encrypt the configuration backup:</p>
+<p>From the main menu, select <strong>Configuration Backup</strong>.</p>
+<p>Select the <strong>Enable backup file encryption</strong> check box.</p>
+<p>From the <strong>Password</strong> field, select a password you want to use for encryption. If you have not created a password beforehand, click <strong>Add</strong> or use the <strong>Manage passwords</strong> link to specify a new password. For more information, see <a href="https://helpcenter.veeam.com/docs/backup/vsphere/password_manager.html">Managing Passwords for Data Encryption</a>.</p>
+<figure class="image"><img src="https://helpcenter.veeam.com/docs/backup/vsphere/images/schedule_config_backup.png" alt="Creating Encrypted Configuration Backups"></figure>
+<p>&nbsp;</p>

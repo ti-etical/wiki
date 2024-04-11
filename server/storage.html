@@ -1,0 +1,68 @@
+<!--
+title: Storage Spaces
+description: 
+published: true
+date: 2024-03-08T12:44:17.403Z
+tags: storage
+editor: ckeditor
+dateCreated: 2024-03-08T12:42:40.074Z
+-->
+
+<p><a href="https://social.technet.microsoft.com/wiki/contents/articles/11382.storage-spaces-frequently-asked-questions-faq.aspx#What_happens_to_Storage_Spaces_when_moving_physical_disks_between_servers">https://social.technet.microsoft.com/wiki/contents/articles/11382.storage-spaces-frequently-asked-questions-faq.aspx#What_happens_to_Storage_Spaces_when_moving_physical_disks_between_servers</a></p>
+<p>&nbsp;</p>
+<figure class="image"><img src="/pics/image.png">
+  <figcaption>Discos podem ficar Read Write no Powershell, mas Somente Leitura no gerenciador</figcaption>
+</figure>
+<p>Executar <code>Set-Disk</code> nesse caso</p>
+<p>&nbsp;</p>
+<blockquote>
+  <p>Because of the new disk policy in Windows, and in support of Failover Clustering, if a clean installation of Windows is performed, a storage pool will default to read-only mode, and the storage spaces will be left unattached.&nbsp;</p>
+  <p>To make the pool and storage spaces available again, execute the following PS cmdlet:</p>
+  <p>&nbsp;</p>
+  <p>Get-StoragePool | Where-Object {$_.IsReadonly –eq $True } | Set-StoragePool –IsReadonly $False</p>
+  <p>Get-VirtualDisk | Where-Object {$_.IsManualAttach –eq $True} | Set-VirtualDisk –IsManualAttach $False</p>
+  <p>Set-Disk -Number 5 -IsReadonly $False</p>
+</blockquote>
+<p><a href="https://docs.microsoft.com/en-us/windows-server/storage/storage-spaces/storage-spaces-states">https://docs.microsoft.com/en-us/windows-server/storage/storage-spaces/storage-spaces-states</a></p>
+<p><a href="https://www.servethehome.com/windows-server-2016-storage-spaces-how-to-replace-failed-hard-drive/">https://www.servethehome.com/windows-server-2016-storage-spaces-how-to-replace-failed-hard-drive/</a></p>
+<p>&nbsp;</p>
+<p>If you take the physical disks that were used to create a storage space and move to a new server or reinstall the OS, you may find the storage pool (storage space) in <a href="https://www.itprotoday.com/windows-server-2012"><strong>Windows Server 2012</strong>&nbsp;</a>is set to read-only and any virtual disks may not attach automatically.</p>
+<p>You can manually attach the virtual disk using the Storage Pools area of Server Manager as shown.</p>
+<p>&nbsp;</p>
+<pre><code class="language-plaintext">PS C:\&gt; get-virtualdisk FriendlyName ResiliencySettingNa OperationalStatus HealthStatus IsManualAttach Size me ------------ ------------------- ----------------- ------------ -------------- ---- DataMirrored Mirror Detached Unknown True 1.3 TB
+PS C:\&gt; Get-VirtualDisk | Where-Object {$_.IsManualAttach –eq $True} | Set-VirtualDisk –IsManualAttach $False
+PS C:\&gt; Get-VirtualDisk FriendlyName ResiliencySettingNa OperationalStatus HealthStatus IsManualAttach Size me ------------ ------------------- ----------------- ------------ -------------- ---- DataMirrored Mirror OK Healthy False 1.3 TB</code></pre>
+<p><a href="https://answers.microsoft.com/en-us/windows/forum/windows_8-files/what-happens-to-my-storage-spaces-pool-if-i-need/5f30b59a-e9f1-4610-974a-1c51230730c5?auth=1">https://answers.microsoft.com/en-us/windows/forum/windows_8-files/what-happens-to-my-storage-spaces-pool-if-i-need/5f30b59a-e9f1-4610-974a-1c51230730c5?auth=1</a></p>
+<p><a href="https://social.technet.microsoft.com/wiki/contents/articles/11382.storage-spaces-frequently-asked-questions-faq.aspx#What_happens_to_Storage_Spaces_when_moving_physical_disks_between_servers">Storage Spaces: Frequently Asked Questions (FAQ) - TechNet Articles - United States (English) - TechNet Wiki (microsoft.com)</a></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<hr>
+<p><span class="text-big"><i><strong>Storage Spaces Degraded</strong></i></span></p>
+<p>Disk Status <i><u>Split</u></i></p>
+<p>&nbsp;</p>
+<p>We can refer the docs to see that the drive at split status due to the drive has become separated from the pool. We can do the following action,</p>
+<p>Reset the drive, erasing all data from the drive and adding it back to the pool as an empty drive.</p>
+<p>To do so, open a PowerShell session as an administrator, run the&nbsp;<code><strong>Reset-PhysicalDisk</strong>&nbsp;</code>cmdlet, and then run&nbsp;<code><strong>Repair-VirtualDisk</strong>.</code></p>
+<p>&nbsp;</p>
+<p><a href="https://docs.microsoft.com/en-us/powershell/module/storage/reset-physicaldisk?view=win10-ps">https://docs.microsoft.com/en-us/powershell/module/storage/reset-physicaldisk?view=win10-ps</a></p>
+<p><a href="https://docs.microsoft.com/en-us/powershell/module/storage/repair-virtualdisk?view=win10-ps">https://docs.microsoft.com/en-us/powershell/module/storage/repair-virtualdisk?view=win10-ps</a></p>
+<p><a href="https://www.catapultsystems.com/blogs/fixing-a-degraded-virtual-disk-in-a-storage-pool-with-a-drive-configured-as-a-hot-spare/">https://www.catapultsystems.com/blogs/fixing-a-degraded-virtual-disk-in-a-storage-pool-with-a-drive-configured-as-a-hot-spare/</a></p>
+<p><a href="https://dannyda.com/2019/12/26/how-to-fix-windows-storage-space-storage-pool-physical-disk-lost-communication-replace-dead-physical-disk/">How to fix: Windows Storage Space/Storage Pool physical disk lost communication, replace dead physical disk &gt; Blog-D without Nonsense (dannyda.com)</a></p>
+<p>&nbsp;</p>
+<hr>
+<h1><strong>Virtual Disk Degraded but all Physical Disks OK.&nbsp;</strong></h1>
+<p>&nbsp;</p>
+<p><span class="text-big"><strong><sup>Storage Spaces&nbsp;</sup></strong></span></p>
+<p>I had a situation where a disk was failing with bad sectors.</p>
+<p>It had not yet gone completely offline. I replaced it following the standard How-To's to retire, replace, and repair the virtual disk via Powershell.</p>
+<p>I've done this other times before with no problems, but this time I ran into the dreaded, 'Storage Spaces Stuck Degraded' issue.</p>
+<p>Successive Repair operations would finish in seconds with no change to the degraded state, and all the Physical Disks were healthy.</p>
+<p>Access to the Virtual Disk seemed Ok, and Chkdsk was fine. Get-VirtualDisk continued to show degraded.</p>
+<p>In the end.. what worked was, brace for it... Detaching the Virtual Disk, and Re-Attaching it. That's it.</p>
+<p>After attaching the Virtual Disk, the Degraded state was gone. Operational state is now OK and HealthStatus is Healthy.</p>
+<p>Disclaimer, this was on Windows Server 2016 TP 4.</p>
+<p>&nbsp;</p>
+<p><a href="https://www.anexinet.com/blog/adding-storage-to-windows-storage-pool/">https://www.anexinet.com/blog/adding-storage-to-windows-storage-pool/</a></p>
+<p><a href="https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/dn782852(v%3Dws.11)">https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/dn782852(v%3Dws.11)</a></p>
+<p>&nbsp;</p>
+<p>If you're worried about IOP's and disk space Dell do the MD3460 and MD3860 chassis that are 4U and can hold 60 drives. Pair it with a 1U server with enough speed and you should be set, and if you need more you can daisy chain expansion chassis that hold another 60 drives</p>

@@ -1,0 +1,178 @@
+<!--
+title: RDS 120
+description: Reset 120 day RDS Grace period on 2016 and 2019
+published: true
+date: 2024-03-08T12:47:00.563Z
+tags: rds
+editor: ckeditor
+dateCreated: 2024-03-06T16:28:18.639Z
+-->
+
+<p>October 13, 2020&nbsp;</p>
+<p>March 25, 2021</p>
+<p>If you have a home lab environment or other lab that you continually test various solutions, licensing and trial expiration is a challenge that you constantly tend to run into. It is just part of the fun of lab environments. While most trials are fairly “hard and fast” and don’t allow you to reset the trial expiration, if you work with Microsoft Windows Server and Remote Desktop Services (RDS), there is a “hack” that allows you to effectively reset the expiration of&nbsp;<a href="https://www.virtualizationhowto.com/2020/06/windows-server-2019-remote-desktop-services-without-domain/">Remote Desktop</a>&nbsp;Services grace period where you can essentially rewind the clock on your RDS licensing if you are making use of this role inside your lab environment. In my lab environment, I am making use of Windows Server 2019 for my Windows workloads. In this post, I will show how to reset 120 day RDS Grace period on 2016 and 2019 Windows Server. Let’s see.</p>
+<p>&nbsp;</p>
+<h2>Remote Desktop Services RDS Licensing</h2>
+<p>When you install Windows Server 2016 or 2019 as with previous Windows versions, you get the normal ability to have the two sessions that you generally have available for administering. However, when you install the true Remote Desktop Services role, you have the ability to have multiple sessions to your server.</p>
+<p>When you install the role, by default, you have a 120-day grace period that Microsoft gives you to properly license the server for use as an RDS installation. If you are using a server in a lab environment, most likely, you are not going to license this type of server outside of production.</p>
+<p>Once the 120 day grace period has expired, you will see the following error when you attempt to RDP to the server:</p>
+<figure class="image"><img src="/error-after-120-day-grace-period-has-expired-for-remote-desktop-services.png"></figure>
+<p>Error after 120 day grace period has expired for Remote Desktop Services</p>
+<p>&nbsp;</p>
+<p>You can either redeploy your Windows Server which will allow you to spin up a new 120 day grace period, or you can actually reset the grace period. If you are like me, the latter is certainly the path of least resistance and work involved. Let’s take a look at how to reset the 120 day RDS grace period.</p>
+<p>You can take a closer look at the official licensing documentation for Remote Desktop Services here:</p>
+<p><a href="https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/rds-client-access-license">https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/rds-client-access-license</a></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2>Reset 120 day RDS Grace period on 2016 and 2019</h2>
+<p>For the exercise of resetting the 120 day grace period for the RDS role, the registry editor is your friend and makes this process easy. Before we begin, there are a couple of disclaimers to make here. Editing the registry can result in totally destroying a Windows system, so proceed with any low-level registry edits with caution. If you are working with a virtual machine, it is always a good practice to create a quick snapshot of the Windows virtual machine before you begin.</p>
+<p>Additionally, for production systems, resetting the 120 day grace period should only be done for systems that are not in production as you should have proper licensing installed for production use.</p>
+<p>&nbsp;</p>
+<p>To reset the grace period, there are actually just 3 steps involved:</p>
+<p>&nbsp;</p>
+<p>Change permissions on the RCM &gt; GracePeriod key</p>
+<p>Delete the “Timebomb” registry entry</p>
+<p>Reboot the server</p>
+<p>&nbsp;</p>
+<p>Now that we have level-set, once you have your snapshot or other backup created, you need to navigate to the following location on your RDS server:</p>
+<p><code>ComputerHKEY_LOCAL_MACHINESYSTEMCurrentControlSetControlTerminal ServerRCMGracePeriod</code></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h3>Change Permissions on the RDS GracePeriod key and delete the key</h3>
+<p>&nbsp;</p>
+<p>After you have navigated to the key documented above, right-click&nbsp;GracePeriod&nbsp;and select&nbsp;Permissions.</p>
+<figure class="image"><img src="/pics/navigate-to-the-rds-graceperiod-key.png"></figure>
+<p>&nbsp;</p>
+<p>For obvious reasons, there are no default permissions on this key for even Administrators. So you have to first&nbsp;take ownership&nbsp;of the key before you can delete the timebomb value. Click the&nbsp;Advanced&nbsp;button on the permissions dialog box.</p>
+<figure class="image"><img src="/pics/navigate-to-the-advanced-permissions-properties.png">
+  <figcaption>Navigate to the Advanced permissions properties</figcaption>
+</figure>
+<p>&nbsp;</p>
+<p>Click the&nbsp;Change&nbsp;button next to the&nbsp;Owner.</p>
+<figure class="image"><img src="/pics/change-the-ownership-of-the-registry-key.png">
+  <figcaption>Change the ownership of the registry key</figcaption>
+</figure>
+<p>&nbsp;</p>
+<p>Here I have selected local administrators group as the owner of the key. However, you will want to choose whichever user/group that you want to use to delete the registry key. Select the options to replace owners and replace all child object permissions.</p>
+<figure class="image"><img src="/pics/user-for-ownership-selected-and-set-to-replace-permissions-on-child-objects.png">
+  <figcaption>User for ownership selected and set to replace permissions on child objects</figcaption>
+</figure>
+<p>&nbsp;</p>
+<p>Confirm the replacement of permissions on the registry key.</p>
+<figure class="image"><img src="/pics/confirm-replacing-permissions.png">
+  <figcaption>Confirm replacing permissions</figcaption>
+</figure>
+<p>Now that we have changed ownership on the key, we can actually set permissions without getting permissions errors. Here I am granting administrators&nbsp;full control&nbsp;on the key.</p>
+<figure class="image"><img src="/pics/change-permissions-for-the-user-you-want-to-be-able-to-delete-the-key.png">
+  <figcaption>Change permissions for the user you want to be able to delete the key</figcaption>
+</figure>
+<p>Now, with permissions set, right-click the timebomb value in the GracePeriod key and&nbsp;Delete.</p>
+<figure class="image"><img src="/pics/delete-the-timebomb-key.png">
+  <figcaption>Delete the timebomb key</figcaption>
+</figure>
+<p>Confirm the deletion of the registry entry.</p>
+<figure class="image"><img src="/pics/confirm-deletion-of-the-timebomb-key-in-the-registry.png">
+  <figcaption>Confirm deletion of the timebomb key in the registry</figcaption>
+</figure>
+<p>Next, the only thing left to do is&nbsp;reboot&nbsp;your server. Once the server is rebooted, you can enjoy once again having the full 120 day grace period for your RDS server in the lab environment.</p>
+<p>&nbsp;</p>
+<h2>Concluding Thoughts</h2>
+<p>The process to reset 120 day RDS Grace period on 2016 and&nbsp;<a href="https://www.virtualizationhowto.com/2020/08/letsencrypt-windows-server-2019-configuration/">2019</a>&nbsp;<a href="https://www.virtualizationhowto.com/2020/07/windows-server-home-lab-build-and-configuration/">Windows Servers</a>&nbsp;as well as older server versions such as Windows Server 2012 and 2012 R2 is very straightforward using this process to delete the timebomb registry key.</p>
+<p>Keep in mind this is not supported and certainly not a process for running in production. However, it is very handy for lab environments to keep from having to redeploy Windows Server virtual machines simply to have a fresh 120 day grace period.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h3>Reset RDS using PowerShell</h3>
+<p><strong>Reset Terminal Services Licensing Grace Period to 120 Days</strong></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>We often need to deploy Terminal Server (Remote Desktop Session Host in 2012) for testing purposes in development environments allowing more than 2 concurrent Remote Desktop Sessions on it. When it is installed, by default it is in default Grace licensing period which is 120 days and it works fine.</p>
+<p>&nbsp;</p>
+<p>Once Grace period expires, the server does not allow even a single Remote Desktop session via RDP and all we can do is logon to the Console of machine using Physical/Virtual console depending on Physical or Virtual machines or try to get in using&nbsp;<strong>mstsc /admin</strong>&nbsp;or&nbsp;<strong>mstsc /console</strong>, then remove the role completely and restart the terminal server and it starts accepting default two RDP sessions.</p>
+<p>&nbsp;</p>
+<p>We sometimes find ourselves in situation when server is nearing to the end of grace period and we don’t have a TS Licensing server in place and we need the default grace period to be reset/extended to next 120 days.</p>
+<p>&nbsp;</p>
+<p>I have created a Script which can be used to query the remaining days of grace period and extend/reset it to next 120 days in case needed.</p>
+<p>NEW : The script has been updated with a -Force switch, If -Force switch parameter is used, It will not ask for Y/N prompt while doing the reset.</p>
+<p>Here is how to use this script without any prompt now:</p>
+<p>.\Reset-TSGracePeriod.ps1 -Force</p>
+<p>Alternatively I have also uploaded this code on My Github Repository which show the changes between old and new script.</p>
+<p><a href="https://github.com/Prakash82x/PowerShell/blob/master/TerminalService/Reset-TSGracePeriod.ps1">https://github.com/Prakash82x/PowerShell/blob/master/TerminalService/Reset-TSGracePeriod.ps1</a></p>
+<p>OR</p>
+<p><u>Here goes the code.</u></p>
+<pre><code class="language-plaintext">## This Script is intended to be used for Querying remaining time and resetting Terminal Server (RDS) Grace Licensing Period to Default 120 Days.
+## Developed by Prakash Kumar (prakash82x@gmail.com) May 28th 2016
+## www.adminthing.blogspot.com
+## Disclaimer: Please test this script in your test environment before executing on any production server.
+## Author will not be responsible for any misuse/damage caused by using it.
+Param(
+[Parameter(Mandatory=$false)] [Switch]$Force
+)
+Clear-Host
+$ErrorActionPreference = "SilentlyContinue"
+## Display current Status of remaining days from Grace period.
+$GracePeriod = (Invoke-WmiMethod -PATH (gwmi -namespace root\cimv2\terminalservices -class win32_terminalservicesetting).__PATH -name GetGracePeriodDays).daysleft
+Write-Host -fore Green ======================================================
+Write-Host -fore Green 'Terminal Server (RDS) grace period Days remaining are' : $GracePeriod
+Write-Host -fore Green ======================================================
+Write-Host
+## Check if -Force Parameter has been used, If so, It will not prompt for Y/N while executing the script and will simply reset the Grace Period.
+If (-not $Force)
+{
+$Response = Read-Host "Do you want to reset Terminal Server (RDS) Grace period to Default 120 Days ? (Y/N)"
+}
+if ($Response -eq "Y" -or $Force) {
+## Reset Terminal Services Grace period to 120 Days
+$definition = @"
+using System;
+using System.Runtime.InteropServices;
+namespace Win32Api
+{
+public class NtDll
+{
+[DllImport("ntdll.dll", EntryPoint="RtlAdjustPrivilege")]
+public static extern int RtlAdjustPrivilege(ulong Privilege, bool Enable, bool CurrentThread, ref bool Enabled);
+}
+}
+"@
+Add-Type -TypeDefinition $definition -PassThru
+$bEnabled = $false
+## Enable SeTakeOwnershipPrivilege
+$res = [Win32Api.NtDll]::RtlAdjustPrivilege(9, $true, $false, [ref]$bEnabled)
+## Take Ownership on the Key
+$key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey("SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod", [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::takeownership)
+$acl = $key.GetAccessControl()
+$acl.SetOwner([System.Security.Principal.NTAccount]"Administrators")
+$key.SetAccessControl($acl)
+## Assign Full Controll permissions to Administrators on the key.
+$rule = New-Object System.Security.AccessControl.RegistryAccessRule ("Administrators","FullControl","Allow")
+$acl.SetAccessRule($rule)
+$key.SetAccessControl($acl)
+## Finally Delete the key which resets the Grace Period counter to 120 Days.
+Remove-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod'
+write-host
+Write-host -ForegroundColor Red 'Resetting, Please Wait....'
+Start-Sleep -Seconds 10
+}
+Else
+{
+Write-Host
+Write-Host -ForegroundColor Yellow '**You Chose not to reset Grace period of Terminal Server (RDS) Licensing'
+}
+## Display Remaining Days again as final status
+tlsbln.exe
+$GracePost = (Invoke-WmiMethod -PATH (gwmi -namespace root\cimv2\terminalservices -class win32_terminalservicesetting).__PATH -name GetGracePeriodDays).daysleft
+Write-Host
+Write-Host -fore Yellow =====================================================
+Write-Host -fore Yellow 'Terminal Server (RDS) grace period Days remaining are' : $GracePost
+Write-Host -fore Yellow =====================================================
+if ($Response -eq "Y" -or $Force)
+{
+Write-Host -Fore Cyan `n"IMPORTANT: Please make sure you restart following services manually to bring this reset in effect:`n`n* Remote Desktop Configuration Properties `n* Remote Desktop Services"
+}
+## Cleanup of Variable
+Remove-Variable * -ErrorAction SilentlyContinue
+##End of Code##</code></pre>
+<p><strong>Note: You will have to restart following services for the reset to come into effect.</strong></p>
+<p>Remote Desktop Configuration Properties</p>
+<p>Remote Desktop Services</p>
+<p>As soon as these services are restarted all the active sessions will be disconnected (Not logged off), Wait for a minute and reconnect again.</p>

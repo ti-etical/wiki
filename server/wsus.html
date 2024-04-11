@@ -1,0 +1,76 @@
+<!--
+title: Wsus
+description: 
+published: true
+date: 2024-03-08T12:46:30.144Z
+tags: wsus
+editor: ckeditor
+dateCreated: 2024-03-06T15:26:21.059Z
+-->
+
+<p><a href="https://learn.microsoft.com/de-de/security-updates/windowsupdateservices/18127655">Clients Not Reporting | Microsoft Learn</a></p>
+<p><a href="https://www.ajtek.ca/wsus/client-machines-not-reporting-to-wsus-properly/">Client Machines Not Reporting to WSUS Properly? - AJ Tek Corporation</a></p>
+<p><a href="https://community.spiceworks.com/topic/1834483-wsus-clients-not-updating">https://community.spiceworks.com/topic/1834483-wsus-clients-not-updating</a></p>
+<hr>
+<p>C:\WINDOWS\SoftwareDistribution\Download.</p>
+<p><code>wuauclt /detectnow</code></p>
+<p><code>wuauclt.exe /detectnow /reportnow</code></p>
+<p><code>netsh interface tcp set global autotuninglevel=disabled</code></p>
+<p>&nbsp;</p>
+<pre><code class="language-plaintext">net stop wuauserv
+REG DELETE "HKLM\Software\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v SusClientId /f
+REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v AccountDomainSid /f
+REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v PingID /f
+REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v SusClientIDValidation /f
+rd /s /q %windir%\softwaredistribution
+net start wuauserv
+wuauclt /resetauthorization /detectnow
+wuauclt /detectnow</code></pre>
+<p><code>SQLCMD.exe -S \\.\pipe\Microsoft##WID\tsql\query -d "SUSDB" -Q "update tbConfigurationC set BitsDownloadPriorityForeground=1"</code></p>
+<p><code>http://www.microsoft.com/en-us/download/confirmation.aspx?id=29065</code></p>
+<p><code>http://support.microsoft.com/default.aspx?scid=kb;EN-US;922330#appliesto</code></p>
+<p>&nbsp;</p>
+<hr>
+<p>https://social.technet.microsoft.com/Forums/en-US/38b4c0c4-415d-4c4d-a2ff-23162637ce45/iis-wsuspool-stops-again-and-again?forum=configmanagergeneral</p>
+<p>powershell lines</p>
+<p>#change the memory size</p>
+<p><code>&amp;"c:\Windows\System32\inetsrv\appcmd.exe" set apppool /apppool.name:wsuspool /recycling.periodicRestart.privateMemory:"3145728"</code></p>
+<p><code>&amp;"c:\Windows\System32\inetsrv\appcmd.exe" set apppool /apppool.name:wsuspool /failure.rapidFailProtection:"false"</code></p>
+<p>you get all values with that:</p>
+<p><code>&amp;"c:\Windows\System32\inetsrv\appcmd.exe" list apppool "wsuspool" /text:*</code></p>
+<p>&nbsp;</p>
+<hr>
+<p><a href="http://wsusservername:8530/selfupdate/iuident.cab">http://WSUSServerName:8530/selfupdate/iuident.cab</a></p>
+<figure class="image"><img src="en-cache://tokenKey%3D%22AuthToken%3AUser%3A178453540%22+2410a47c-e71e-4636-849d-bd62bc551602+d14d4bc2c7c3b2c23065d5a25b908974+https://www.evernote.com/shard/s610/share/ad7c-s610/res/b80e60e0-6092-4cf8-94da-bf0e8d9f2a2f"></figure>
+<p>wusa update.msu /quiet</p>
+<p>&nbsp;</p>
+<hr>
+<h1><strong>Win10 Product Names Mean in WSUS</strong></h1>
+<p>&nbsp;</p>
+<p>SCOM and WSUS currently have a dozen Windows 10 “products” listed but the&nbsp;descriptions are useless.&nbsp; After several hours of reading and asking Microsoft Partner Support about the various settings, this is what I have deduced:</p>
+<p>&nbsp;</p>
+<figure class="image"><img src="https://i1.wp.com/www.urtech.ca/wp-content/uploads/2016/12/WSUS-Windows-10-Products-Explained-300x253.png?resize=300%2C253" alt="wsus-windows-10-products-explained"></figure>
+<p>&nbsp;</p>
+<p><strong>Windows 10 and Later Drivers:</strong>&nbsp;These are drivers that will be offered to all builds of Windows 10 all the time, excluding&nbsp;upgrade scenarios (i.e., via Orchestrator, DSM, or Device Manager). They will not download during a Dynamic Update&nbsp;(i.e. Windows 10 upgrading itself from&nbsp;build&nbsp;1511 to 1607).&nbsp; &nbsp; They should only include KBs for&nbsp;the current Win10 version.</p>
+<p>.</p>
+<p><strong>Windows 10 and Later Upgrade &amp; Servicing Drivers:</strong>&nbsp;These are drivers that are offered in all Win10 scenarios (i.e., via Orchestrator, DSM, Device Manager, or during DU). They may include some KBs later win10 version and enable current win10 version to upgrade.</p>
+<p>.</p>
+<p><strong>Windows 10 Anniversary Update and Later Servicing Drivers:</strong>&nbsp; These drivers apply&nbsp;only to Windows 10 1607 Anniversary&nbsp;and will not contain later upgrade. It also includes servicing drivers as “Windows 10 and later upgrade &amp; Servicing drivers”</p>
+<p>.</p>
+<p><strong>Windows 10 Anniversary Update Server and Later Servicing Drivers:</strong>&nbsp;These drivers apply&nbsp;only to what is now named Windows Server 2016&nbsp;and will not contain later upgrade. It also includes servicing drivers as “Windows 10 and later upgrade &amp; Servicing drivers”</p>
+<p>.</p>
+<p><strong>Windows 10 Dynamic Update:</strong>&nbsp;This includes only&nbsp;updates to the setup process that occurs when&nbsp;one build of Windows 10 is trying to update to a new build of Windows 10 (i.e. 1511 to 1607).</p>
+<p><strong>Windows 10 Features On Demand:</strong>&nbsp;This loads the items listed on any Windows 10 PC’s PROGRAMS AND FEATURES &gt; TURN WINDOWS FEATURES ON AND OFF into the WSUS server.&nbsp; That would mean that when a .NET 3.5 install is required on a Windows 10 PC, it will pull the files&nbsp;from the WSUS server rather than making you install it via command line using a&nbsp;Windows 10 DVD to&nbsp;<a href="https://www.urtech.ca/2016/01/solved-cannot-install-net-3-5-on-windows-10-error-0x800f0906-and-0x800f081f/">solve errors 0x800F0906 and 0x800F081F</a></p>
+<p>.</p>
+<p><strong>Windows 10 GDR-DU LP:</strong>&nbsp;GDR = General Distribution Release, DU=Dynamic Update, LP = Language Packs.&nbsp; These updates are to Languages&nbsp;used by the current release version of Windows 10 (in December 2016 that is build 1607) during a Dynamic Update (see item 5 above).</p>
+<p>.</p>
+<p><strong>Windows 10 GDR-DU:</strong>&nbsp;GDR = General Distribution Release, DU=Dynamic Update. These updates are only used by the current GDR build of Windows 10 when it is trying to perform a&nbsp;Dynamic Update (see item 5 above).</p>
+<p>.</p>
+<p><strong>Windows 10 Language Interface Packs:</strong>&nbsp; Windows Language Interface Pack (LIP) is a high-quality, localized “skin” for emerging or minority language markets.&nbsp;&nbsp;LIP provides the desktop user with an approximately 80% localized user experience by translating a reduced set of user interface (UI) elements. LIP has a dependency on a base Language Pack of Windows.&nbsp; Languages are offered as a LIP or a LP depend on the level of investment Microsoft has in a specific country/region. It is possible for a LIP market to grow into a LP market between the current and future Windows rollout.&nbsp; See&nbsp;<a href="https://msdn.microsoft.com/en-us/goglobal/bb688177.aspx">THIS article for more details on LIP and LP’s</a>.</p>
+<p>.</p>
+<p><strong>Windows 10 Language Packs:</strong>&nbsp;Language Packs contain&nbsp;full blown languages.&nbsp; Remember that at it’s core Windows 10 is&nbsp;language agnostic.&nbsp; It comes with no default language and one has to be loaded for it to function.</p>
+<p>.</p>
+<p><strong>Windows 10 LTSB:</strong>&nbsp;LTSB = Long Term Servicing Branch.&nbsp; Updates in this category are for a special long life version of Windows 10 that is promised to exist for 10 years with minimal updates.&nbsp; See&nbsp;<a href="https://www.urtech.ca/2015/08/solved-what-is-windows-10-ltsb-long-term-servicing-branch/">THIS for more details on Windows 10 LTSB</a>.</p>
+<p>.</p>
+<p><strong>Windows 10:</strong>&nbsp;These are the standard release patches that are may apply to any or&nbsp;all builds of Windows 10.&nbsp; Each one of these updates will have a KBase article for them.</p>
+<p><a href="https://social.technet.microsoft.com/Forums/en-US/488ba2a8-6f23-4369-ae7c-dc0e661d5869/whats-difference-in-windows-10-products-wsus?forum=winserverwsus">Technet</a></p>
